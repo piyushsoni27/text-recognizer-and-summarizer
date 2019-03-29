@@ -81,6 +81,45 @@ def decode_predictions(scores, geometry):
     	# return a tuple of the bounding boxes and associated confidences
     return (rects, confidences)
 
+def showTextOnImage():
+    output = orig.copy()
+    # loop over the results
+    for ((startX, startY, endX, endY), text) in results:
+        # display the text OCR'd by Tesseract
+        print("OCR TEXT")
+        print("========")
+        print("{}\n".format(text))
+        
+        # strip out non-ASCII text so we can draw the text on the image
+        # using OpenCV, then draw the text and a bounding box surrounding
+        # the text region of the input image
+        text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
+        
+        cv2.rectangle(output, (startX, startY), (endX, endY),
+        	(0, 0, 255), 2)
+        cv2.putText(output, text, (startX, startY - 20),
+        	cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+        
+        # show the output image
+        cv2.imshow("Text Detection", output)
+        
+    cv2.waitKey(0)    
+    cv2.destroyAllWindows()    
+    return
+
+def printDetectedText():
+    global para
+    
+    paragraph = ''
+    
+    for pline in para:
+        line = ''
+        for ((startX, startY, endX, endY), word) in pline:
+            line += word + ' '
+        paragraph += line + '\n'
+        
+    print(paragraph)
+    return
 
 # load the input image and grab the image dimensions
 image = cv2.imread(image_path)
@@ -119,8 +158,6 @@ net.setInput(blob)
 # suppress weak, overlapping bounding boxes
 (rects, confidences) = decode_predictions(scores, geometry)
 boxes = non_max_suppression(np.array(rects), probs=confidences)
-
-print(minh)
 
 # initialize the list of results
 results = []
@@ -188,30 +225,8 @@ for ((startX, startY, endX, endY), text) in results:
     line.append(((startX, startY, endX, endY), text))
     
 para.append(line)
-
-print(para)
 para = [sorted(x) for x in para]
 
-output = orig.copy()
-# loop over the results
-for ((startX, startY, endX, endY), text) in results:
-    # display the text OCR'd by Tesseract
-    print("OCR TEXT")
-    print("========")
-    print("{}\n".format(text))
-    
-    # strip out non-ASCII text so we can draw the text on the image
-    # using OpenCV, then draw the text and a bounding box surrounding
-    # the text region of the input image
-    text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
-    
-    cv2.rectangle(output, (startX, startY), (endX, endY),
-    	(0, 0, 255), 2)
-    cv2.putText(output, text, (startX, startY - 20),
-    	cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
-    
-    # show the output image
-    cv2.imshow("Text Detection", output)
-    
-cv2.waitKey(0)    
-cv2.destroyAllWindows()    
+print(para)
+printDetectedText()
+# showTextOnImage()
